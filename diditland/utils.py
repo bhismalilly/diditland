@@ -1,12 +1,4 @@
-import subprocess
 from datetime import datetime, timezone
-
-
-def run_cmd(cmd: list[str]) -> str:
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120, encoding="utf-8", errors="replace")
-    if result.returncode != 0:
-        raise RuntimeError(f"Command failed: {' '.join(cmd)}\n{result.stderr.strip()}")
-    return result.stdout.strip()
 
 
 def time_ago(iso_date: str) -> str:

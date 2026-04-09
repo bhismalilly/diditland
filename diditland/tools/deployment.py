@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 from diditland import mcp
 from diditland.config import COMPONENTS, ENV_BRANCH_MAP
 from diditland.tools.component import check_component
@@ -29,11 +31,16 @@ def check_deployment(
     results = []
     results.append(f"=== {env.upper()} ({branch} branch) — {ecr_repository} ===\n")
 
-    for component in COMPONENTS:
+    def _check(component: str) -> str:
         try:
-            result = check_component(github_repo, ecr_repository, env, branch, component)
+            return check_component(github_repo, ecr_repository, env, branch, component)
         except Exception as e:
-            result = f"{component.upper()}: ❌ ERROR\n  {e}"
+            return f"{component.upper()}: ❌ ERROR\n  {e}"
+
+    with ThreadPoolExecutor(max_workers=len(COMPONENTS)) as pool:
+        component_results = list(pool.map(_check, COMPONENTS))
+
+    for result in component_results:
         results.append(result)
         results.append("")
 

@@ -3,7 +3,7 @@ name = "diditland"
 version = "0.1.0"
 description = "MCP tool to check if GitHub commits are deployed as ECR images"
 requires-python = ">=3.10"
-dependencies = ["mcp[cli]"]
+dependencies = ["mcp[cli]", "boto3", "requests"]
 
 [project.scripts]
 diditland = "diditland:main"

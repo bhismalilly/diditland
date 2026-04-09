@@ -1,7 +1,9 @@
-import json
+import boto3
+from botocore.exceptions import ClientError
 
 from diditland.config import AWS_REGION
-from diditland.utils import run_cmd
+
+_ecr_client = boto3.client("ecr", region_name=AWS_REGION)
 
 
 def get_ecr_latest_image(ecr_repo: str, env: str, component: str) -> dict | None:
@@ -9,19 +11,14 @@ def get_ecr_latest_image(ecr_repo: str, env: str, component: str) -> dict | None
     latest_tag = f"{tag_prefix}latest"
 
     try:
-        raw = run_cmd([
-            "aws", "ecr", "describe-images",
-            "--repository-name", ecr_repo,
-            "--region", AWS_REGION,
-            "--no-cli-pager",
-            "--image-ids", f"imageTag={latest_tag}",
-            "--output", "json",
-        ])
-    except RuntimeError:
+        resp = _ecr_client.describe_images(
+            repositoryName=ecr_repo,
+            imageIds=[{"imageTag": latest_tag}],
+        )
+    except (ClientError, Exception):
         return None
 
-    data = json.loads(raw)
-    images = data.get("imageDetails", [])
+    images = resp.get("imageDetails", [])
     if not images:
         return None
 
@@ -35,5 +32,5 @@ def get_ecr_latest_image(ecr_repo: str, env: str, component: str) -> dict | None
     return {
         "short_sha": sha,
         "tags": tags,
-        "pushed_at": img.get("imagePushedAt"),
+        "pushed_at": str(img.get("imagePushedAt", "")),
     }

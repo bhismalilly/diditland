@@ -1,11 +1,33 @@
-import json
+import subprocess
 
-from diditland.utils import run_cmd
+import requests
+
+_token = None
+_session = None
+
+
+def _get_session() -> requests.Session:
+    global _token, _session
+    if _session is None:
+        _token = subprocess.run(
+            ["gh", "auth", "token"], capture_output=True, text=True, timeout=10,
+        ).stdout.strip()
+        _session = requests.Session()
+        _session.headers.update({
+            "Authorization": f"Bearer {_token}",
+            "Accept": "application/vnd.github+json",
+        })
+    return _session
+
+
+def _gh_api(endpoint: str) -> dict | list:
+    resp = _get_session().get(f"https://api.github.com/{endpoint}", timeout=15)
+    resp.raise_for_status()
+    return resp.json()
 
 
 def get_branch_head(repo: str, branch: str) -> dict:
-    raw = run_cmd(["gh", "api", f"repos/{repo}/commits/{branch}"])
-    data = json.loads(raw)
+    data = _gh_api(f"repos/{repo}/commits/{branch}")
     return {
         "sha": data["sha"],
         "short_sha": data["sha"][:7],
@@ -18,8 +40,7 @@ def get_branch_head(repo: str, branch: str) -> dict:
 def get_ecr_commit_info(repo: str, ecr_sha: str) -> dict | None:
     """Look up a commit by its short SHA to get its message and date."""
     try:
-        raw = run_cmd(["gh", "api", f"repos/{repo}/commits/{ecr_sha}"])
-        data = json.loads(raw)
+        data = _gh_api(f"repos/{repo}/commits/{ecr_sha}")
         return {
             "sha": data["sha"],
             "short_sha": data["sha"][:7],
@@ -27,33 +48,28 @@ def get_ecr_commit_info(repo: str, ecr_sha: str) -> dict | None:
             "author": data["commit"]["author"]["name"],
             "date": data["commit"]["author"]["date"],
         }
-    except RuntimeError:
+    except Exception:
         return None
 
 
 def is_ancestor(repo: str, commit_sha: str, branch: str) -> bool:
     """Check if a commit is an ancestor of (i.e. exists on) the given branch."""
     try:
-        raw = run_cmd([
-            "gh", "api",
-            f"repos/{repo}/compare/{commit_sha}...{branch}",
-            "--jq", ".status",
-        ])
-        return raw.strip() in ("ahead", "identical")
-    except RuntimeError:
+        data = _gh_api(f"repos/{repo}/compare/{commit_sha}...{branch}")
+        return data.get("status") in ("ahead", "identical")
+    except Exception:
         return False
 
 
 def get_commits_between(repo: str, base_sha: str, branch: str) -> list[dict]:
     """Get commits between base_sha and branch HEAD."""
     try:
-        raw = run_cmd([
-            "gh", "api",
-            f"repos/{repo}/compare/{base_sha}...{branch}",
-            "--jq", "[.commits[] | {sha: .sha, message: .commit.message, date: .commit.author.date}]",
-        ])
-        return json.loads(raw)
-    except (RuntimeError, json.JSONDecodeError):
+        data = _gh_api(f"repos/{repo}/compare/{base_sha}...{branch}")
+        return [
+            {"sha": c["sha"], "message": c["commit"]["message"], "date": c["commit"]["author"]["date"]}
+            for c in data.get("commits", [])
+        ]
+    except Exception:
         return []
 
 
@@ -66,8 +82,8 @@ def find_component_changes(repo: str, base_sha: str, branch: str, component: str
     touching = []
     for c in commits:
         try:
-            raw = run_cmd(["gh", "api", f"repos/{repo}/commits/{c['sha']}", "--jq", "[.files[].filename]"])
-            files = json.loads(raw)
+            data = _gh_api(f"repos/{repo}/commits/{c['sha']}")
+            files = [f["filename"] for f in data.get("files", [])]
             component_files = [f for f in files if f.startswith(f"{component}/")]
             if component_files:
                 touching.append({
@@ -76,6 +92,6 @@ def find_component_changes(repo: str, base_sha: str, branch: str, component: str
                     "date": c["date"],
                     "files": component_files,
                 })
-        except (RuntimeError, json.JSONDecodeError):
+        except Exception:
             continue
     return touching
