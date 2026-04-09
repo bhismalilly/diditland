@@ -1,5 +1,6 @@
 import json
 
+from diditland.config import AWS_REGION
 from diditland.utils import run_cmd
 
 
@@ -11,6 +12,7 @@ def get_ecr_latest_image(ecr_repo: str, env: str, component: str) -> dict | None
         raw = run_cmd([
             "aws", "ecr", "describe-images",
             "--repository-name", ecr_repo,
+            "--region", AWS_REGION,
             "--no-cli-pager",
             "--image-ids", f"imageTag={latest_tag}",
             "--output", "json",

@@ -5,3 +5,5 @@ ENV_BRANCH_MAP = {
 }
 
 COMPONENTS = ["frontend", "backend"]
+
+AWS_REGION = "us-east-2"
