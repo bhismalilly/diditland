@@ -1,4 +1,4 @@
-from aws_assistant import mcp
+from diditland import mcp
 
 
 if __name__ == "__main__":

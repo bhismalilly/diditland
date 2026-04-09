@@ -1,13 +1,13 @@
-from aws_assistant import mcp
-from aws_assistant.config import COMPONENTS, ENV_BRANCH_MAP
-from aws_assistant.services.ecr import get_ecr_latest_image
-from aws_assistant.services.github import (
+from diditland import mcp
+from diditland.config import COMPONENTS, ENV_BRANCH_MAP
+from diditland.services.ecr import get_ecr_latest_image
+from diditland.services.github import (
     find_component_changes,
     get_branch_head,
     get_ecr_commit_info,
     is_ancestor,
 )
-from aws_assistant.utils import time_ago
+from diditland.utils import time_ago
 
 
 def check_component(repo: str, ecr_repo: str, env: str, branch: str, component: str) -> str:

@@ -1,6 +1,6 @@
 import json
 
-from aws_assistant.utils import run_cmd
+from diditland.utils import run_cmd
 
 
 def get_ecr_latest_image(ecr_repo: str, env: str, component: str) -> dict | None:

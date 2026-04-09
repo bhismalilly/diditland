@@ -1,6 +1,6 @@
 import json
 
-from aws_assistant.utils import run_cmd
+from diditland.utils import run_cmd
 
 
 def get_branch_head(repo: str, branch: str) -> dict:

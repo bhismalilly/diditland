@@ -1,6 +1,6 @@
-from aws_assistant import mcp
-from aws_assistant.config import COMPONENTS, ENV_BRANCH_MAP
-from aws_assistant.tools.component import check_component
+from diditland import mcp
+from diditland.config import COMPONENTS, ENV_BRANCH_MAP
+from diditland.tools.component import check_component
 
 
 @mcp.tool()

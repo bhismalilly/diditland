@@ -1,16 +1,16 @@
 [project]
-name = "aws-assistant"
+name = "diditland"
 version = "0.1.0"
 description = "MCP tool to check if GitHub commits are deployed as ECR images"
 requires-python = ">=3.10"
 dependencies = ["mcp[cli]"]
 
 [project.scripts]
-aws-assistant = "aws_assistant:mcp.run"
+diditland = "diditland:mcp.run"
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["aws_assistant"]
+packages = ["diditland"]
