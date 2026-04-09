@@ -1,2 +1,6 @@
-/flow.md
-/__pycache__
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
