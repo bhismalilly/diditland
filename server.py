@@ -1,5 +1,5 @@
-from diditland import mcp
+from diditland import main
 
 
 if __name__ == "__main__":
-    mcp.run()
+    main()
